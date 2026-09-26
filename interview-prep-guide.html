@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Prep — Review Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bg:#12151c;
+    --surface:#1b2029;
+    --surface-2:#232a37;
+    --border:#2a3140;
+    --text:#e6e9ef;
+    --text-muted:#8b93a3;
+    --accent:#5eead4;
+    --accent-dim:#2f5f5a;
+    --warm:#fbbf24;
+    --danger:#f87171;
+    --success:#4ade80;
+    --java:#f0a860;
+    --spring:#7fd67f;
+    --micro:#8ab4f8;
+    --leet:#e69ad0;
+    --sysdesign:#b7a6f2;
+    --aws:#f7b955;
+    --concurrency:#7ac6f2;
+    --jvm:#e6857a;
+    --java8:#9fd0a0;
+    --streams:#f2b87a;      
+    --resume:#8fd4d0;
+    --collections:#c9a6f0;
+    --designpatterns:#f28fa3;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, #171c26 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:28px 20px 80px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  header.hero{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--border);
+    padding-bottom:20px;
+  }
+  .hero-title{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:30px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .hero-title span{color:var(--accent);}
+  .hero-sub{color:var(--text-muted);font-size:14px;margin-top:6px;max-width:520px;line-height:1.5;}
+  .hero-date{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    color:var(--text-muted);
+    text-align:right;
+  }
+
+  /* ---- Excel toolbar ---- */
+  .excel-toolbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:12px 16px;
+    margin-bottom:22px;
+  }
+  .excel-status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-muted);
+  }
+  .excel-status.linked{color:var(--success);}
+
+  /* ---- Dashboard ---- */
+  .dashboard{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:14px;
+    margin-bottom:30px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat-card .num{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:28px;
+    font-weight:700;
+  }
+  .stat-card .label{font-size:12.5px;color:var(--text-muted);margin-top:2px;}
+  .stat-card.due .num{color:var(--warm);}
+  .stat-card.overdue .num{color:var(--danger);}
+  .stat-card.mastered .num{color:var(--success);}
+
+  /* ---- Review Queue (signature element) ---- */
+  .queue-section{margin-bottom:36px;}
+  .section-heading{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:17px;
+    font-weight:600;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-heading .count-pill{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    padding:2px 8px;
+    border-radius:20px;
+    color:var(--text-muted);
+  }
+  .queue-empty{
+    color:var(--text-muted);
+    font-size:13.5px;
+    background:var(--surface);
+    border:1px dashed var(--border);
+    border-radius:10px;
+    padding:18px;
+  }
+  .card-stack{display:flex;flex-direction:column;gap:10px;}
+  .review-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:4px solid var(--topic-color, var(--accent));
+    border-radius:8px;
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:14px;
+    transition:transform .15s ease, border-color .15s ease;
+    cursor:pointer;
+  }
+  .review-card:hover{transform:translateX(2px);border-color:var(--text-muted);}
+  .review-card.overdue{border-left-color:var(--danger);}
+  .rc-text{font-size:14px;line-height:1.4;flex:1;}
+  .rc-meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--text-muted);
+    margin-top:5px;
+  }
+  .rc-meta.overdue-txt{color:var(--danger);}
+  .rc-open-link{color:var(--accent);}
+  .rc-actions{display:flex;gap:8px;flex-shrink:0;}
+  .rc-actions .btn{position:relative;z-index:1;}
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    border:none;
+    border-radius:6px;
+    padding:8px 12px;
+    cursor:pointer;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  .btn:active{transform:scale(.96);}
+  .btn-primary{background:var(--accent);color:#0c1613;}
+  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted);}
+  .btn-danger{background:transparent;border:1px solid #4a2b2b;color:var(--danger);}
+  .btn-danger:hover{background:#2a1717;opacity:1;}
+
+  .add-form{
+    display:flex;gap:10px;margin-bottom:18px;
+  }
+  .add-form input{
+    flex:1;background:var(--surface);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:10px 12px;font-size:13.5px;font-family:'Inter',sans-serif;
+  }
+  .add-form input::placeholder{color:var(--text-muted);}
+  .btn:hover{opacity:.88;}
+  .btn:focus-visible, .tab:focus-visible, input:focus-visible, select:focus-visible{
+    outline:2px solid var(--accent);outline-offset:2px;
+  }
+
+  /* ---- Tabs ---- */
+  .tabs{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+    border-bottom:1px solid var(--border);
+    padding-bottom:0;
+  }
+  .tab{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    background:none;
+    border:none;
+    color:var(--text-muted);
+    padding:10px 16px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    display:flex;
+    align-items:center;
+    gap:7px;
+  }
+  .tab .dot{width:7px;height:7px;border-radius:50%;background:var(--tab-color);}
+  .tab.active{color:var(--text);border-bottom-color:var(--tab-color);}
+  .tab .tcount{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--text-muted);}
+
+  .tab-divider{
+    display:inline-block;width:1px;align-self:stretch;
+    background:var(--border);margin:6px 4px;
+  }
+  .due-tab .dot{background:var(--warm);}
+  .due-tab.active{color:var(--warm);border-bottom-color:var(--warm);}
+  .due-tab:not(.active):hover{color:var(--warm);}
+
+  .topic-toolbar{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .progress-bar{
+    flex:1;min-width:160px;height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden;
+  }
+  .progress-bar-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s ease;}
+  .progress-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);white-space:nowrap;}
+
+  .search-row{
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .q-search-input{
+    flex:1;min-width:200px;
+    background:var(--surface);border:1px solid var(--border);color:var(--text);
+    border-radius:8px;padding:10px 14px;font-size:13.5px;font-family:'Inter',sans-serif;
+  }
+  .q-search-input::placeholder{color:var(--text-muted);}
+  .q-search-input:focus{border-color:var(--accent);}
+
+  .search-stats{
+    display:flex;gap:8px;flex-shrink:0;
+  }
+  .stat-chip{
+    font-family:'JetBrains Mono',monospace;font-size:11px;
+    padding:6px 12px;border-radius:20px;border:1px solid var(--border);
+    white-space:nowrap;
+  }
+  .stat-chip.not-read{color:var(--text-muted);}
+  .stat-chip.read{color:var(--success);border-color:#25502f;}
+
+  .due-day-group{margin-bottom:26px;}
+
+  .due-day-tabs{
+    display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;
+  }
+  .due-day-tab{
+    font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;
+    background:var(--surface);border:1px solid var(--border);color:var(--text-muted);
+    padding:8px 16px;border-radius:20px;cursor:pointer;
+    display:flex;align-items:center;gap:6px;
+  }
+  .due-day-tab .tcount{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    background:var(--surface-2);padding:1px 7px;border-radius:20px;color:var(--text-muted);
+  }
+  .due-day-tab.active{
+    background:var(--warm);border-color:var(--warm);color:#1a1305;
+  }
+  .due-day-tab.active .tcount{background:rgba(0,0,0,0.15);color:#1a1305;}
+  .due-day-tab:not(.active):hover{color:var(--text);border-color:var(--text-muted);}
+
+  .filter-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+  .filter-chip{
+    font-size:11.5px;font-family:'JetBrains Mono',monospace;
+    background:var(--surface);border:1px solid var(--border);color:var(--text-muted);
+    padding:5px 10px;border-radius:20px;cursor:pointer;
+  }
+  .filter-chip.active{background:var(--surface-2);color:var(--text);border-color:var(--text-muted);}
+
+  /* ---- Question list ---- */
+  .q-list{display:flex;flex-direction:column;gap:8px;}
+  .q-item{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:13px 15px;
+    display:flex;
+    flex-direction:column;
+    gap:0;
+  }
+  .q-item.flash-highlight{
+    animation:flashHighlight 1.8s ease-out;
+  }
+  @keyframes flashHighlight{
+    0%{border-color:var(--warm); box-shadow:0 0 0 3px rgba(251,191,36,0.35);}
+    100%{border-color:var(--border); box-shadow:0 0 0 0 rgba(251,191,36,0);}
+  }
+  .q-item.editing{border-color:var(--accent);}
+  .edit-form-inline{
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .edit-form-inline label{font-size:11px;color:var(--text-muted);}
+  .edit-form-inline textarea,
+  .edit-form-inline input{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:10px 12px;font-size:13.5px;font-family:'Inter',sans-serif;line-height:1.5;
+  }
+  .edit-form-inline textarea:focus,
+  .edit-form-inline input:focus{border-color:var(--accent);}
+  .edit-field-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .edit-field-row input{flex:1;min-width:160px;font-family:'JetBrains Mono',monospace;}
+  .edit-actions{display:flex;gap:8px;margin-top:2px;}
+  .q-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+  }
+  .q-index{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--text-muted);
+    width:26px;flex-shrink:0;padding-top:2px;
+  }
+  .q-body{flex:1;min-width:0;}
+  .q-text{font-size:13.8px;line-height:1.5;}
+  .q-tags{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;align-items:center;}
+  .status-badge{
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;
+    padding:2px 8px;border-radius:20px;border:1px solid var(--border);
+  }
+  .status-badge.new{color:var(--text-muted);}
+  .status-badge.scheduled{color:var(--accent);border-color:var(--accent-dim);}
+  .status-badge.mastered{color:var(--success);border-color:#25502f;}
+  .status-badge.overdue{color:var(--danger);border-color:#5c2b2b;}
+  .status-badge.answered{color:var(--warm);border-color:#6b551c;}
+  .q-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
+
+  .answer-panel{
+    margin-top:12px;
+    padding-top:12px;
+    border-top:1px dashed var(--border);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .answer-panel label{font-size:11px;color:var(--text-muted);margin-top:4px;}
+  .answer-panel label:first-child{margin-top:0;}
+  .answer-panel textarea{
+    width:100%;min-height:220px;resize:vertical;
+    background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:12px 14px;font-size:13.5px;font-family:'Inter',sans-serif;line-height:1.6;
+  }
+  .answer-panel input{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:9px 12px;font-size:13px;font-family:'JetBrains Mono',monospace;
+  }
+  .answer-link-preview{
+    align-self:flex-start;color:var(--accent);text-decoration:none;font-size:12px;
+    font-family:'JetBrains Mono',monospace;margin-top:2px;
+  }
+  .answer-link-preview:hover{text-decoration:underline;}
+
+  /* leetcode form */
+  .leet-form{
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:16px;margin-bottom:18px;display:grid;grid-template-columns:2fr 1.4fr 1fr auto;gap:10px;align-items:end;
+  }
+  .leet-form label{font-size:11px;color:var(--text-muted);display:block;margin-bottom:5px;}
+  .leet-form input, .leet-form select{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    border-radius:6px;padding:9px 10px;font-size:13px;font-family:'Inter',sans-serif;
+  }
+  .diff-tag{font-size:10.5px;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:20px;}
+  .diff-Easy{color:var(--success);border:1px solid #25502f;}
+  .diff-Medium{color:var(--warm);border:1px solid #6b551c;}
+  .diff-Hard{color:var(--danger);border:1px solid #5c2b2b;}
+
+  footer{text-align:center;color:var(--text-muted);font-size:11.5px;margin-top:50px;font-family:'JetBrains Mono',monospace;}
+  @media (max-width:640px){
+    .leet-form{grid-template-columns:1fr;}
+    .review-card{flex-direction:column;align-items:flex-start;}
+    .rc-actions{width:100%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div>
+      <div class="hero-title">Review <span>Desk</span></div>
+      <div class="hero-sub">Java, Spring Boot, Microservices, System Design &amp; LeetCode — 50 senior-level (10+ yrs) questions per section. Mark one done and it comes back to you on day 3, 7, 14, 30 and 90.</div>
+    </div>
+    <div class="hero-date" id="todayLabel"></div>
+  </header>
+
+  <div class="excel-toolbar">
+    <button class="btn btn-primary" id="loadExcelBtn">📥 Load Excel</button>
+    <button class="btn btn-ghost" id="saveExcelBtn">💾 Save to Excel</button>
+    <input type="file" id="excelFileInput" accept=".xlsx" style="display:none">
+    <span class="excel-status" id="excelStatus">Using built-in questions — not yet linked to a spreadsheet.</span>
+  </div>
+
+  <div class="dashboard" id="dashboard"></div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="topicArea"></div>
+
+  <footer>Your progress is saved automatically to this browser session.</footer>
+</div>
+
+<script>
+const INTERVALS = [3,7,14,30,90];
+const TOPIC_META = {
+  java:{label:'Java', color:'var(--java)'},
+  concurrency:{label:'Concurrency & Multithreading', color:'var(--concurrency)'},
+  jvminternals:{label:'JVM Internals & Performance', color:'var(--jvm)'},
+  java8plus:{label:'Java 8+ / Streams / Functional', color:'var(--java8)'},
+  collections:{label:'Collections Framework', color:'var(--collections)'},
+  streams:{label:'JAVA STREAMS CODING INTERVIEW QUESTIONS', color:'var(--streams)'},
+  designpatterns:{label:'Design Patterns / Architecture / Testing', color:'var(--designpatterns)'},
+  springboot:{label:'Spring Boot', color:'var(--spring)'},
+  microservices:{label:'Microservices', color:'var(--micro)'},
+  systemdesign:{label:'System Design', color:'var(--sysdesign)'},
+  databases:{label:'Databases / SQL / NoSQL', color:'var(--accent)'},
+  aws:{label:'AWS', color:'var(--aws)'},
+  leetcode:{label:'LeetCode', color:'var(--leet)'},
+  resume:{label:'Questions Based On Your Resume', color:'var(--resume)'},
+  asked:{label:'Already Asked question from linked/glassdoor/reddit', color:'var(--accent)'},
+  manager:{label:'Manager / Leadership / Behavioral', color:'var(--accent)'}
+  
+};
+
+const STREAM_Q =['wer'];
+
+const JAVA_Q = [
+"Walk through the JVM memory model — heap regions, metaspace, and per-thread stacks.",
+"Compare G1, ZGC, and Shenandoah collectors — pause-time trade-offs and when you'd pick each.",
+"How do you diagnose a production memory leak using heap dumps and a profiler like async-profiler?",
+"Explain happens-before relationships and how volatile and final field semantics relate to them.",
+"Compare ExecutorService, ForkJoinPool, and CompletableFuture — when do you reach for each?",
+"How does ConcurrentHashMap achieve thread safety without locking the entire map?",
+"What is false sharing and how do you detect and avoid it in high-throughput code?",
+"Explain thenApply vs thenCompose vs thenCombine on CompletableFuture, and common composition pitfalls.",
+"How do you tune GC for a low-latency service, and what metrics do you monitor?",
+"Explain class loading and how custom classloaders can cause memory leaks in app servers.",
+"How does the JIT compiler optimize hot code paths — inlining, escape analysis, deoptimization?",
+"Design a thread-safe LRU cache from scratch — what data structures and locking strategy?",
+"How would you reduce startup and cold-start latency for a Java service?",
+"Why do many senior teams avoid checked exceptions in service layers?",
+"Compare records and sealed classes vs traditional POJOs/enums for domain modeling.",
+"Design a rate limiter using core Java concurrency primitives (token bucket / sliding window).",
+"Explain the differences between synchronized, ReentrantLock, and StampedLock.",
+"What is ThreadLocal, and what are the risks of using it in a thread-pool-based server?",
+"How does the fork/join framework implement work-stealing?",
+"Explain the internals of parallel streams and when they actually hurt performance.",
+"What is the Java Platform Module System (JPMS), and what problems does it solve?",
+"How would you implement a custom Spliterator for a domain-specific data structure?",
+"Explain weak, soft, and phantom references, and their use cases (caches, cleaners).",
+"How do you avoid ClassLoader leaks in long-running or hot-redeployed applications?",
+"What are the trade-offs of using reflection heavily in a framework you build?",
+"Explain producer-consumer using BlockingQueue vs a custom wait/notify implementation.",
+"How would you design a circuit breaker purely with core Java, no libraries?",
+"What is escape analysis and how does it enable stack allocation of objects?",
+"Explain object pooling — when is it actually worth the complexity on a modern JVM?",
+"How do you profile CPU hotspots vs I/O bottlenecks in a Java service under load?",
+"Why does the choice of executor for CompletableFuture.supplyAsync matter in production?",
+"Explain immutability's role in thread-safe domain objects, and how you enforce it.",
+"How would you implement your own bounded thread pool with backpressure?",
+"Explain method handles and invokedynamic — what problem did they solve versus reflection?",
+"Compare the Builder, Factory, and Strategy patterns — where have you used each in production?",
+"How do you handle versioning/backward compatibility of serialized Java objects across deploys?",
+"What is structured concurrency (Project Loom) and how does it change concurrent code?",
+"Explain virtual threads — how do they differ from platform threads, and what benefits most?",
+"How would you detect and fix a deadlock in a live production JVM?",
+"What is the difference between fail-fast and fail-safe iterators, and why does it matter?",
+"Explain HashMap resizing and treeification, and how a poor hashCode() degrades performance.",
+"How do you design an idempotent retry mechanism at the application layer?",
+"How would you use AspectJ or a custom annotation processor for cross-cutting concerns?",
+"What's your approach to designing exception hierarchies for a large service codebase?",
+"How do you benchmark Java code correctly with JMH, and what pitfalls invalidate naive benchmarks?",
+"How do try-with-resources and AutoCloseable prevent leaks, and what are suppressed-exception edge cases?",
+"How would you design a batching mechanism to reduce downstream calls (write-behind cache)?",
+"What are the trade-offs between java.util.concurrent.atomic classes vs synchronized blocks?",
+"How does fail-fast iteration interact with streams created from a mutating collection?",
+"Compare CompletableFuture-based async pipelines vs reactive streams (Project Reactor) for I/O-bound services.",
+"Describe a time you optimized a Java application under real memory or latency constraints — walk through your process."
+];
+
+const CONCURRENCY_Q = [
+"Explain the Java Memory Model (JMM) and why it exists.",
+"What is the volatile keyword, and what guarantees does it provide?",
+"Difference between synchronized methods and blocks — object-level vs class-level locking.",
+"Explain deadlock, livelock, and starvation with examples.",
+"How would you debug a deadlock in production?",
+"Explain ExecutorService, thread pools, and how you'd size a thread pool.",
+"Difference between Runnable and Callable.",
+"What is CompletableFuture, and how does it differ from Future?",
+"Explain CountDownLatch vs CyclicBarrier vs Semaphore.",
+"What is ThreadLocal, and when is it useful/dangerous?",
+"Explain the producer-consumer problem and how you'd implement it in Java.",
+"What is happens-before ordering in the JMM?",
+"Difference between wait()/notify() and Lock/Condition.",
+"What is a race condition, and how do you prevent one?",
+"Explain ReentrantLock vs synchronized — trade-offs.",
+"What is false sharing, and how do you avoid it?",
+"Explain atomic classes (AtomicInteger, AtomicReference) and CAS operations.",
+"How do you safely publish an object across threads?",
+"What is thread starvation, and how do fair locks help?",
+"How would you profile and fix lock contention in a live system (JFR/JMC)?"
+];
+
+const JVM_Q = [
+"Explain JVM memory areas: heap, stack, metaspace, method area.",
+"Explain Young Gen vs Old Gen and generational garbage collection.",
+"Compare G1GC, ZGC, and Shenandoah — when would you pick each?",
+"How do you diagnose a memory leak in a Java application?",
+"What causes an OutOfMemoryError, and what are the different types?",
+"Explain class loading and the classloader hierarchy.",
+"What is JIT compilation, and how does it optimize bytecode at runtime?",
+"Difference between stack and heap memory allocation.",
+"How do you tune GC for low-latency applications?",
+"What tools do you use for heap dump/thread dump analysis?",
+"Explain escape analysis and stack allocation optimizations.",
+"What is a StackOverflowError, and how do you debug one caused by recursion?",
+"How does the JVM handle string interning?",
+"What's the impact of excessive object creation on GC pause times?",
+"Explain soft, weak, and phantom references and their use cases."
+];
+
+const JAVA8_Q = [
+"Explain lambda expressions and functional interfaces.",
+"Difference between map() and flatMap() in streams.",
+"What is the difference between intermediate and terminal stream operations?",
+"Explain Optional — why was it introduced, and common misuse patterns.",
+"How do you write a custom Collector?",
+"Difference between parallel streams and sequential streams — pitfalls of parallel streams.",
+"Explain method references and their four types.",
+"What are default and static methods in interfaces (Java 8)?",
+"Explain Predicate, Function, Supplier, Consumer interfaces.",
+"How do streams handle laziness internally?",
+"What's new in Java 9-21 that's relevant to daily development (var, records, sealed classes, pattern matching, text blocks)?",
+"What are Java records, and how do they differ from POJOs?",
+"Explain switch expressions (Java 14+) vs traditional switch statements.",
+"What are virtual threads (Project Loom, Java 21) and how do they differ from platform threads?",
+"How do virtual threads compare to reactive programming (Reactor/RxJava) for high concurrency?"
+];
+
+const COLLECTIONS_Q = [
+"How does HashMap work internally (hashing, buckets, treeification in Java 8+)?",
+"Difference between HashMap, LinkedHashMap, and TreeMap.",
+"How does ConcurrentHashMap achieve thread safety without locking on retrievals, while providing high expected concurrency of updates?",
+"Difference between ArrayList and LinkedList — time complexity trade-offs.",
+"How would you implement an LRU cache using Java collections?",
+"Difference between Comparable and Comparator.",
+"What is fail-fast vs fail-safe iteration? Give examples.",
+"Difference between HashSet, LinkedHashSet, and TreeSet.",
+"How does equals()/hashCode() contract affect HashMap/HashSet behavior?",
+"Explain CopyOnWriteArrayList and when you'd use it.",
+"What's the difference between Iterator and ListIterator?",
+"How do you make a collection immutable/unmodifiable?",
+"Explain PriorityQueue internals and use cases.",
+"Difference between Array and ArrayList.",
+"How does TreeMap maintain sorted order internally?"
+];
+
+const DESIGNPATTERNS_Q = [
+"Explain Singleton pattern and thread-safe implementations in Java.",
+"Explain Builder, Factory, and Strategy patterns with real use cases.",
+"How do you write effective unit tests with JUnit and Mockito?",
+"Explain SOLID principles with Java examples.",
+"How would you design a rate limiter in Java?",
+"Explain the Observer pattern and its use in event-driven systems.",
+"How do you handle backward compatibility when evolving a public API?",
+"Walk through a time you diagnosed and fixed a production performance issue end-to-end."
+];
+
+const SPRING_Q = [
+"Walk through what happens from main() to a fully started ApplicationContext.",
+"How would you design a multi-module Spring Boot monorepo for a large team?",
+"Explain BeanPostProcessor vs BeanFactoryPostProcessor — when have you written a custom one?",
+"How do you handle distributed transactions across services when @Transactional can't span boundaries?",
+"Deep dive on Spring Security's filter chain — how would you add custom auth (mTLS, API key)?",
+"How do you design idempotent REST APIs and handle duplicate request delivery?",
+"Explain HikariCP connection pool tuning under load — what metrics indicate you're undersized?",
+"How do you implement graceful shutdown so in-flight requests aren't dropped during a deploy?",
+"Design an observability stack for a Spring Boot fleet — metrics, tracing, structured logging, correlation IDs.",
+"How do you version and evolve a public REST API without breaking existing consumers?",
+"Explain @Transactional pitfalls: self-invocation, proxy-based AOP, and read-only transaction misuse.",
+"How would you implement circuit breaker and bulkhead patterns with Resilience4j in a high-traffic service?",
+"How do you securely manage secrets and config at scale (Vault, K8s secrets, Spring Cloud Config)?",
+"What's your strategy for contract testing between Spring Boot microservices (e.g., Pact)?",
+"How do you design a Redis caching layer with Spring — invalidation strategy, stampede prevention?",
+"Explain how Spring Boot auto-configuration decides which beans to create, and how you'd write a custom starter.",
+"How do you handle N+1 query problems at scale, and catch them before they hit production?",
+"Explain optimistic vs pessimistic locking in Spring Data JPA and when you'd choose each.",
+"How would you design a multi-tenant Spring Boot application — schema-per-tenant vs shared schema?",
+"What's your approach to database migrations (Flyway/Liquibase) in a zero-downtime pipeline?",
+"How do you implement correlation IDs that propagate through async calls and downstream HTTP clients?",
+"What's a common @Async executor pitfall, and how do you configure a proper thread pool?",
+"How would you design per-client rate limiting at the API gateway or filter level in Spring?",
+"How do Spring Boot Actuator health checks integrate with Kubernetes liveness/readiness probes?",
+"How do you handle partial failures calling multiple downstream services in parallel with WebClient?",
+"Compare RestTemplate, WebClient, and Feign — trade-offs for a large microservices fleet.",
+"How do you design a global exception-handling strategy with a consistent error contract across services?",
+"How would you implement API request/response logging without leaking PII?",
+"How do you tune Tomcat/Netty thread pools for a high-concurrency Spring Boot service?",
+"What is Spring WebFlux, and when is reactive actually worth the added complexity over MVC?",
+"How would you migrate a blocking Spring MVC service to reactive without a full rewrite?",
+"How would you implement optimistic concurrency control (versioning) to prevent lost updates?",
+"How do you design and test Kafka consumers/producers in Spring Boot — retries, error handling, DLQ?",
+"What's your approach to schema compatibility for Kafka/Avro messages consumed by Spring services?",
+"How do you secure service-to-service calls with the OAuth2 client credentials flow in Spring Security?",
+"How would you implement feature flags/toggles cleanly in a Spring Boot codebase?",
+"How do you handle configuration drift across dozens of microservices' application.yml files?",
+"What's your strategy for blue-green or canary deployments with Spring Boot on Kubernetes?",
+"How would you design a restartable bulk/batch job using Spring Batch?",
+"How would you implement distributed locking (via Redis or ZooKeeper) in a Spring Boot service?",
+"How do you profile and fix a slow-starting Spring Boot application in production?",
+"What's your approach to integration-testing Spring Security auth/authz configurations?",
+"How would you design audit logging that captures who changed what without cluttering business logic?",
+"How does Spring Boot's embedded server thread model affect throughput under blocking I/O?",
+"How do you handle backward-incompatible entity/schema changes safely (expand/contract)?",
+"What's your approach to dependency and CVE management across a large multi-module Spring Boot project?",
+"How would you design a plugin/extension architecture using conditional beans and ApplicationContext?",
+"How would you implement a saga coordinator service using Spring Boot and a message broker?",
+"How do you handle graceful degradation when a critical downstream dependency is completely down?",
+"Describe a production incident you diagnosed in a Spring Boot service — walk through your process end to end."
+];
+
+const MICRO_Q = [
+"How do you decide service boundaries — applying Domain-Driven Design and bounded contexts?",
+"Design a strategy to migrate a monolith to microservices without a big-bang cutover.",
+"How do you handle data consistency across services that each own their own database?",
+"Compare orchestration vs choreography Sagas — which for a payment/order flow, and why?",
+"How do you prevent and detect cascading failures across a service mesh?",
+"Design an event-driven architecture with idempotent consumers and the outbox pattern.",
+"How do you approach schema evolution for Kafka topics without breaking downstream consumers?",
+"How do you do zero-downtime deploys and database migrations together (expand/contract)?",
+"What's your approach to multi-region/multi-AZ deployment for disaster recovery and low latency?",
+"How do you design and enforce API contracts across dozens of teams?",
+"Explain CQRS and event sourcing — when is the added complexity actually worth it?",
+"How do you debug a latency spike that spans six microservices?",
+"How do you handle authentication/authorization consistently across services (token propagation)?",
+"How do you design for backpressure when a downstream service slows down under load?",
+"What's your strategy for testing a distributed system end-to-end without a fragile test suite?",
+"How do you decide between synchronous REST and asynchronous messaging for a given interaction?",
+"What are the trade-offs of a shared library vs code duplication across microservices?",
+"How do you recognize and fix a 'distributed monolith' anti-pattern?",
+"How would you plan a service mesh rollout (Istio/Linkerd) for an existing fleet — gains vs cost?",
+"How do you implement distributed tracing end-to-end, including context propagation and sampling?",
+"What's your approach to capacity planning and autoscaling for services with uneven traffic?",
+"How do you handle versioned APIs when multiple client versions are in production simultaneously?",
+"How would you design a dead-letter queue strategy and reprocessing pipeline?",
+"How do you prevent thundering-herd problems when many services restart or reconnect at once?",
+"What's your approach to service ownership and on-call structure as the fleet grows?",
+"How would you design a feature needing strong consistency across two services without 2PC?",
+"How do you secure inter-service traffic with mTLS at scale, including certificate rotation?",
+"How do you handle a release blocked because Service A depends on Service B's API change?",
+"Design a strategy for gradually deprecating a legacy service while consumers migrate off it.",
+"How do you handle 'chatty' microservices causing excessive network overhead?",
+"How would you design a shared data platform (CDC pipeline) instead of tight service coupling?",
+"How do you implement graceful degradation with fallback responses for non-critical dependencies?",
+"Explain your approach to chaos engineering / game days for a microservices platform.",
+"How do you design multi-tenancy across a microservices platform — isolation vs shared infra?",
+"What's your strategy for cost optimization across a large microservices fleet in the cloud?",
+"How do you handle a shared database that still exists mid-migration to microservices?",
+"How would you split responsibilities between an API gateway and individual services?",
+"How do you approach SLOs/SLIs and error budgets across a microservices organization?",
+"Design a strategy for long-running business processes spanning multiple services (workflow orchestration).",
+"How do you ensure exactly-once-like processing in a Kafka-based microservices pipeline?",
+"How do you handle clock skew and ordering guarantees across distributed services?",
+"How would you design handling for partial deployment failures during a rolling update?",
+"What are the trade-offs of a shared cache layer (Redis cluster) across multiple microservices?",
+"How do you approach schema registry governance for event-driven microservices at scale?",
+"Design a strategy for safely rolling back a deployment that has already processed events.",
+"How do you handle GDPR/data-deletion requirements when user data spans many services?",
+"What's your approach to realistic load testing a microservices platform (traffic shaping, mocking)?",
+"How do you design health checks that differentiate 'service is up' from 'service can do work'?",
+"How would you structure a platform team to support dozens of product teams building microservices?",
+"Describe the most complex distributed-systems incident you've handled — root cause and fix?"
+];
+
+const SYSTEMDESIGN_Q = [
+"Design a URL shortener (like bit.ly) at scale.",
+"Design a distributed rate limiter used across many services.",
+"Design a notification system (push/email/SMS) for millions of users.",
+"Design a scalable e-commerce order/inventory system with consistency where it matters.",
+"Design a distributed cache (like Redis) — eviction, replication, partitioning.",
+"Design a news feed / activity feed system (like Twitter/LinkedIn).",
+"Design a file storage/sharing system (like Dropbox/Google Drive).",
+"Design a payment processing system with idempotency and reconciliation.",
+"Design a real-time chat application with delivery/read receipts at scale.",
+"Design a distributed job scheduler / task queue.",
+"Design a search autocomplete/typeahead system.",
+"Design a video streaming platform's backend — upload, transcode, CDN delivery.",
+"Design an API-rate-limited multi-tenant SaaS platform.",
+"How would you design a system for eventual consistency across regions, and resolve conflicts?",
+"Walk through a system you designed — bottlenecks at scale and how you resolved them.",
+"Design a distributed unique ID generator (like Twitter Snowflake).",
+"Design a web crawler that scales to billions of pages.",
+"Design a ride-sharing dispatch system (like Uber/Lyft) — matching drivers to riders.",
+"Design a distributed logging/metrics pipeline ingesting billions of events per day.",
+"Design an online code execution/judge system (like LeetCode/HackerRank's backend).",
+"Design a ticket booking system (like Ticketmaster) handling flash-sale traffic without double-booking.",
+"Design a CDN — cache invalidation and edge routing.",
+"Design a distributed lock service (like ZooKeeper/etcd) — how does it guarantee consensus?",
+"Design the serving infrastructure around a recommendation system (not the ML model itself).",
+"Design an ad-serving system with strict latency SLAs (e.g., under 100ms).",
+"Design a social media like/follow counter that stays accurate under massive concurrent writes.",
+"Design a distributed configuration management system used by thousands of services.",
+"Design a multiplayer game's real-time state synchronization backend.",
+"Design a large-scale email service (like Gmail) — storage, search, spam filtering at a high level.",
+"Design a metrics/monitoring system (like Datadog) ingesting and querying time-series data at scale.",
+"Design a global inventory system for a retailer with warehouses across multiple regions.",
+"Design a fraud detection pipeline that must flag transactions in near real time.",
+"Design a document collaboration system (like Google Docs) — concurrent editing and conflicts.",
+"Design a streaming ETL pipeline for near-real-time analytics from user events to dashboards.",
+"Design a feature flag / experimentation (A/B testing) platform.",
+"Design a distributed workflow engine (like Airflow/Temporal) for long-running jobs.",
+"Design a global API gateway that handles millions of requests per second.",
+"Design a location-based service (e.g., 'find nearby restaurants') with geospatial indexing.",
+"Design an online auction/bidding system that handles bursts of concurrent bids fairly.",
+"Design a subscription billing system handling proration, retries, and failed payments.",
+"How would you design a system to absorb a 10x traffic spike without permanent over-provisioning?",
+"Design a secrets management system used across an entire engineering organization.",
+"Design a tamper-evident, queryable audit trail system at scale.",
+"Design a distributed session store for a web app with millions of concurrent users.",
+"Design a system to detect and mitigate a DDoS attack at the application layer.",
+"Design a multi-region active-active database replication strategy — how do you resolve write conflicts?",
+"Design a batch + real-time hybrid architecture (Lambda) and discuss trade-offs vs Kappa architecture.",
+"How do you approach capacity estimation (back-of-envelope math) at the start of a design interview?",
+"Design a system for exactly-once event delivery between two independently scaled services.",
+"How would you lead an architecture review for a new large-scale system — what questions come first?"
+];
+
+DATABASES_Q = [
+"Explain the differences between OLTP and OLAP workloads.",
+"How do you choose between SQL and NoSQL databases for a given application?",
+"Explain ACID vs BASE properties and when each is appropriate.",
+"How do you design a database schema for a multi-tenant SaaS application?",
+"Explain database indexing strategies and how they affect read/write performance.",
+"How do you handle database migrations in a zero-downtime deployment?",
+"Explain the differences between relational and document-oriented databases.",
+"How do you design for database sharding and partitioning?",
+"Explain the CAP theorem and its implications for distributed databases.",
+"How do you implement caching strategies to reduce database load?",
+"Explain the differences between SQL joins (INNER, LEFT, RIGHT, FULL) and when to use each.",
+"How do you handle database replication and failover in a high-availability setup?",
+"Explain the differences between synchronous and asynchronous replication.",
+"How do you design a database for high write throughput and low latency?",
+"Explain the differences between row-based and column-based storage engines.",
+"How do you handle database connection pooling and resource management?",
+"Explain the differences between ACID-compliant and eventually consistent databases.",
+"How do you design a database for multi-region deployments and data sovereignty?",
+"Explain the differences between SQL and NoSQL query languages and their use cases.",
+"How do you handle database backups and disaster recovery planning?",
+"Explain the differences between relational and graph databases and their use cases.",
+"How do you design a database for time-series data and analytics?",
+"Explain the differences between OLAP cubes and traditional relational databases.",
+"How do you handle database transactions and isolation levels in a distributed system?",
+"Explain the differences between primary and secondary indexes and their impact on query performance.",
+"How do you design a database for real-time analytics and streaming data?",
+"Explain the differences between in-memory databases and disk-based databases.",
+"How do you handle database schema evolution and versioning in a microservices architecture?",
+"Explain the differences between SQL and NewSQL databases and their use cases.",
+"How do you design a database for geospatial data and location-based services?",
+"Explain the differences between relational and key-value databases and their use cases.",
+"How do you handle database security and access control in a multi-tenant environment?",
+"Explain the differences between OLTP and HTAP (Hybrid Transactional/Analytical Processing) databases and their use cases.",
+"How do you design a database for event sourcing and CQRS patterns?",
+"Explain the differences between SQL and graph query languages (e.g., Cypher, Gremlin) and their use cases.",
+"How do you handle database performance tuning and query optimization in a large-scale system?",
+"Explain the differences between relational and document-oriented databases and their use cases.",
+"How do you design a database for multi-model data and polyglot persistence?",
+"Explain the differences between SQL and NoSQL databases in terms of scalability and performance.",
+"How do you handle database monitoring and alerting for performance and availability issues?",
+"Explain the differences between relational and columnar databases and their use cases.",
+"How do you design a database for real-time analytics and streaming data processing?",
+"Explain the differences between SQL and NewSQL databases in terms of consistency and availability.",
+"How do you handle database replication and synchronization across multiple regions?",
+"Explain the differences between relational and graph databases in terms of data modeling and query capabilities.",
+"How do you design a database for high availability and disaster recovery in a cloud environment?",
+"Explain the differences between SQL and NoSQL databases in terms of data modeling and query capabilities.",
+"How do you handle database schema migrations and versioning in a continuous delivery pipeline?",
+"Explain the differences between relational and document-oriented databases in terms of data modeling and query capabilities.",
+"How do you design a database for multi-tenant SaaS applications with data isolation and security?",
+"Explain the differences between SQL and NoSQL databases in terms of data consistency and availability.",
+"How do you handle database performance monitoring and tuning in a large-scale distributed system?",
+"Explain the differences between relational and graph databases in terms of data relationships and query capabilities.",
+"How do you design a database for real-time analytics and streaming data processing in a microservices architecture?",
+"Explain the differences between SQL and NewSQL databases in terms of scalability and performance."
+];
+
+const AWS_Q = [
+// Fundamentals & Well-Architected
+"Explain the AWS Well-Architected Framework's six pillars and how you'd apply them to a system review.",
+"What is the shared responsibility model in AWS, and where's the line for IaaS vs PaaS vs SaaS offerings?",
+"How do you approach a multi-account AWS strategy using AWS Organizations and Control Tower?",
+"What are Service Control Policies (SCPs) and how do they differ from IAM policies?",
+"Explain AWS Regions, Availability Zones, and edge locations — how do you design for fault tolerance across them?",
+"What's your approach to a tagging strategy across a large AWS estate for cost allocation and governance?",
+"How do you evaluate build vs buy when choosing a managed AWS service over self-hosting on EC2?",
+"What is an AWS Landing Zone and why is it used in large enterprise environments?",
+"How do you approach a Well-Architected Review for a legacy workload with known technical debt?",
+"Explain the difference between AWS Organizations consolidated billing and per-account billing.",
+// IAM & Security
+"Explain the difference between an IAM role, an IAM user, and an IAM group.",
+"How does IAM policy evaluation logic work — explicit deny, explicit allow, implicit deny?",
+"What's the difference between resource-based policies and identity-based policies?",
+"How do you implement least-privilege access at scale across dozens of teams?",
+"Explain cross-account access using IAM roles and AssumeRole.",
+"What is AWS STS and how do temporary security credentials work?",
+"How do you secure the AWS root account in an enterprise setting?",
+"How would you design a permissions-boundary strategy for developer self-service IAM roles?",
+"What is AWS KMS and how do you design a key-management strategy across environments?",
+"Explain envelope encryption and how KMS implements it.",
+"How do you rotate secrets and credentials automatically — Secrets Manager vs Parameter Store?",
+"What's the difference between AWS Secrets Manager and Systems Manager Parameter Store?",
+"How would you detect and respond to a compromised IAM access key?",
+"Explain AWS GuardDuty and Security Hub, and how they fit into a security operations workflow.",
+"How do you design network-level security using Security Groups vs NACLs, and when do you use each?",
+"What is AWS Config and how do you use it for compliance auditing?",
+"How do you design for data encryption at rest and in transit across a multi-service architecture?",
+"How would you audit and remediate publicly exposed S3 buckets across an organization?",
+// EC2 & Compute
+"Explain the different EC2 pricing models — On-Demand, Reserved, Spot, Savings Plans — and when to use each.",
+"How do you design a workload to be resilient to Spot Instance interruptions?",
+"What is the difference between instance store and EBS volumes?",
+"How do you choose the right EC2 instance family for a given workload — compute vs memory vs storage optimized?",
+"Explain EBS volume types (gp3, io2, st1, sc1) and how you'd choose between them.",
+"How do you implement automated patching across a large EC2 fleet?",
+"What is an EC2 placement group, and when would you use cluster vs spread vs partition placement?",
+"How do you design for horizontal scaling of a stateful application on EC2?",
+"Explain the EC2 instance metadata service (IMDSv2) and why it matters for security.",
+"How do you handle EC2 instance bootstrapping — user data, Golden AMIs, configuration management?",
+"What's your approach to right-sizing EC2 instances based on utilization metrics?",
+"How do you design a hybrid compute environment using AWS Outposts or Local Zones?",
+"Explain how EC2 Auto Recovery works and when it doesn't help.",
+"What is the difference between EBS-backed and instance-store-backed AMIs?",
+"How do you approach a blue-green deployment for an EC2-based application?",
+"What's your strategy for managing fleet-wide OS-level vulnerabilities at scale?",
+"How would you design a burstable-workload architecture using T-family instances effectively?",
+"Explain how Elastic IP addresses work and when you actually need one.",
+// VPC & Networking
+"Walk through designing a VPC architecture for a multi-tier application with public/private/isolated subnets.",
+"Explain the difference between a NAT Gateway and a NAT Instance.",
+"How do you design VPC Peering vs Transit Gateway for connecting many VPCs?",
+"What is a VPC endpoint — Gateway vs Interface — and why would you use one?",
+"Explain route tables and how traffic flow is controlled within a VPC.",
+"How do you design a hub-and-spoke network topology across multiple AWS accounts?",
+"What's the difference between Security Groups and Network ACLs, and how do they interact?",
+"How do you troubleshoot connectivity issues between two EC2 instances in different subnets?",
+"Explain how AWS Direct Connect works and when you'd choose it over a VPN.",
+"How do you design a highly available Site-to-Site VPN architecture?",
+"What is VPC Flow Logs and how do you use it for network troubleshooting or security analysis?",
+"How would you design network segmentation for a PCI-DSS or HIPAA-compliant workload?",
+"How would you design DNS resolution across a hybrid on-prem/AWS network using Route 53 Resolver?",
+"What MTU considerations apply to VPC peering across regions?",
+"How do you design centralized egress traffic control — NAT/firewall — across many VPCs?",
+"Explain how AWS Transit Gateway route tables enable network segmentation.",
+"How would you architect a multi-region active-active network with low-latency failover?",
+"What's your approach to IP address planning (CIDR allocation) for a large, growing AWS organization?",
+// S3 & Storage
+"Explain S3 storage classes and how you'd design a lifecycle policy to optimize cost.",
+"How does S3 achieve its durability and availability guarantees?",
+"What is S3 versioning and how does it interact with lifecycle policies and deletion?",
+"Explain S3 bucket policies vs IAM policies vs ACLs for controlling access.",
+"How do you design cross-region replication for disaster recovery on S3?",
+"What is S3 Transfer Acceleration and when would you use it?",
+"How do you optimize S3 performance for very high request rates through prefix design?",
+"Explain S3 Object Lock and its use for compliance / WORM requirements.",
+"How would you design an event-driven pipeline triggered by S3 object uploads?",
+"What's the difference between EBS, EFS, and S3 — when would you choose each?",
+"How do you design EFS for a workload needing shared, POSIX-compliant storage across many EC2 instances?",
+"Explain S3 pre-signed URLs and their security implications.",
+"How do you audit and prevent accidental public exposure of S3 data at scale?",
+"What is S3 Select and how does it help reduce data transfer costs?",
+"How would you design a data lake architecture using S3 as the storage layer?",
+// RDS/Aurora & Relational DB
+"Explain the difference between RDS Multi-AZ and Read Replicas.",
+"How does Aurora differ architecturally from standard RDS MySQL/PostgreSQL?",
+"What's your approach to database failover testing for a production RDS Multi-AZ deployment?",
+"How do you design a backup and point-in-time recovery strategy for RDS?",
+"Explain RDS Proxy and the connection-pooling problem it solves.",
+"How would you scale a read-heavy RDS workload without re-architecting the application?",
+"What's your approach to zero-downtime schema migrations on RDS in production?",
+"How do you secure RDS instances — encryption, network isolation, IAM database authentication?",
+"Explain Aurora Global Database and its use case for multi-region disaster recovery.",
+"How do you monitor and troubleshoot RDS performance issues using Performance Insights and slow query logs?",
+"What's the trade-off between RDS and self-managing a database on EC2?",
+"How would you design a database sharding strategy once a single RDS instance can't scale further?",
+"Explain Aurora Serverless and when it's a good fit versus provisioned Aurora.",
+"How do you approach a major-version database upgrade on RDS with minimal downtime?",
+// DynamoDB & NoSQL
+"Explain DynamoDB's partition key and sort key design, and how it affects performance.",
+"How does DynamoDB achieve single-digit-millisecond latency at scale?",
+"What is the difference between provisioned and on-demand capacity modes in DynamoDB?",
+"Explain DynamoDB Global Tables and how conflict resolution works.",
+"How do you design a DynamoDB single-table design for a complex domain model?",
+"What are DynamoDB Streams and how would you use them for event-driven architectures?",
+"How do you avoid and detect hot partitions in DynamoDB?",
+"Explain DynamoDB Transactions and their consistency guarantees.",
+"How would you migrate a relational schema to DynamoDB without a redesign disaster?",
+"What's your approach to cost optimization for a high-throughput DynamoDB table?",
+"Explain DynamoDB Accelerator (DAX) and when it's worth adding.",
+"How do you implement efficient pagination with DynamoDB queries?",
+"What's the difference between eventually consistent and strongly consistent reads in DynamoDB?",
+"How would you design TTL-based data expiration in DynamoDB for a session store?",
+// Lambda & Serverless
+"How does Lambda cold start work, and what strategies reduce its impact?",
+"Explain the Lambda execution model — concurrency, throttling, reserved and provisioned concurrency.",
+"How would you design a large serverless application's error handling and retry strategy?",
+"What are Lambda's execution time and payload size limits, and how do you design around them?",
+"Explain how Lambda integrates with API Gateway for building REST/HTTP APIs.",
+"How do you securely manage secrets and configuration in a Lambda function?",
+"What's your approach to testing and locally debugging Lambda functions before deployment?",
+"Explain Lambda layers and when you'd use them versus bundling dependencies directly.",
+"How do you monitor and trace a distributed serverless application using X-Ray and CloudWatch Logs Insights?",
+"What's the difference between synchronous and asynchronous Lambda invocations, and how does error handling differ?",
+"How would you design a serverless event-driven pipeline using Lambda, SQS, and DynamoDB together?",
+"Explain Step Functions and when you'd use it to orchestrate multiple Lambda functions.",
+"How do you throttle Lambda's concurrent execution to avoid overwhelming a downstream database?",
+"What's your strategy for deploying Lambda functions safely using canary/linear deployments, aliases, and versions?",
+// ECS/EKS/Containers/Fargate
+"Compare ECS and EKS — when would you choose one over the other for a large organization?",
+"Explain the difference between ECS with the EC2 launch type vs the Fargate launch type.",
+"How do you design service discovery for containers running on ECS or EKS?",
+"What's your approach to horizontal pod autoscaling and cluster autoscaling in EKS?",
+"How do you secure a Kubernetes cluster on EKS — IAM Roles for Service Accounts, network policies?",
+"How would you design a CI/CD pipeline for containerized applications deploying to ECS/EKS?",
+"How do you manage secrets in a containerized workload on ECS or EKS?",
+"What's your strategy for zero-downtime deployments in ECS — rolling update vs blue-green?",
+"How do you design multi-tenant isolation on a shared EKS cluster?",
+"How would you troubleshoot a container that's crash-looping in production?",
+"How do you approach cost optimization for a large EKS cluster — Spot nodes, right-sizing, Fargate vs EC2?",
+"What's the role of a service mesh (App Mesh, Istio) in an ECS/EKS environment?",
+"How would you design logging and observability for hundreds of microservices running on EKS?",
+"How would you migrate a fleet of EC2-based services to containers on ECS/EKS with minimal risk?",
+// Auto Scaling/ELB/High Availability
+"Explain the difference between Application Load Balancer, Network Load Balancer, and Gateway Load Balancer.",
+"How do you design Auto Scaling policies based on custom CloudWatch metrics?",
+"What's your approach to designing a highly available architecture across multiple AZs and regions?",
+"How do target groups and health checks work with an ALB, and how do you tune them for fast failure detection?",
+"How would you design a system to handle sudden, unpredictable traffic spikes?",
+"What's the difference between target tracking, step scaling, and simple scaling policies?",
+"How do you design sticky sessions with an ALB, and what are the trade-offs?",
+"How would you architect graceful instance termination during Auto Scaling scale-in events?",
+"Explain how cross-zone load balancing works and its cost implications.",
+"What's your approach to load-testing an auto-scaling architecture before a major traffic event?",
+// CloudFormation/Terraform/IaC/DevOps CI-CD
+"Compare CloudFormation and Terraform — trade-offs for a large enterprise AWS environment.",
+"How do you design a CloudFormation stack structure for a large, multi-team application — nested stacks vs StackSets?",
+"What's your approach to managing state drift in Infrastructure as Code?",
+"How would you design a CI/CD pipeline using CodePipeline, CodeBuild, and CodeDeploy?",
+"How do you implement a rollback strategy for a failed CloudFormation deployment?",
+"What's your approach to secrets management within an IaC pipeline?",
+"How would you design a GitOps workflow for deploying infrastructure changes to AWS?",
+"Explain how AWS CDK differs from raw CloudFormation, and when you'd choose it.",
+"How do you test infrastructure code before it reaches production — unit tests, policy-as-code, plan review?",
+"What's your strategy for managing dev/staging/prod environments with the same IaC codebase?",
+"How would you design a blue-green deployment pipeline for a full application stack, not just code?",
+"How would you use AWS Systems Manager for fleet-wide configuration management and patching?",
+"How do you manage dependencies between CloudFormation stacks using cross-stack references?",
+"What's your approach to enforcing security and compliance policies automatically in CI/CD (policy-as-code)?",
+"How would you design a self-service infrastructure platform for developers using IaC and guardrails?",
+"How would you handle a partially failed CloudFormation stack update in production?",
+// CloudWatch/Monitoring/Logging/X-Ray
+"How do you design a centralized logging strategy across a large multi-account AWS organization?",
+"Explain CloudWatch Metrics, Alarms, and Dashboards — how do you design meaningful alerting?",
+"What's your approach to reducing alert fatigue while still catching real production issues?",
+"How do you use CloudWatch Logs Insights to debug a production incident quickly?",
+"Explain how AWS X-Ray helps trace requests across a distributed, serverless architecture.",
+"What's your approach to setting SLOs and error budgets using CloudWatch metrics?",
+"How would you design anomaly detection for unusual traffic or cost patterns?",
+"What's the difference between CloudWatch Logs, CloudTrail, and VPC Flow Logs — what does each capture?",
+"How do you correlate logs, metrics, and traces across services during an incident investigation?",
+"What's your approach to cost-effective long-term log retention and archival?",
+// SQS/SNS/EventBridge/Kinesis/Messaging
+"Explain the difference between SQS Standard and FIFO queues, and when you'd use each.",
+"How do you design a dead-letter queue strategy for a message processing pipeline?",
+"What's the difference between SQS and SNS, and when would you use them together — fan-out pattern?",
+"Explain EventBridge and how it differs from SNS for event-driven architectures.",
+"How do you design exactly-once-like processing using SQS and idempotent consumers?",
+"What's the difference between Kinesis Data Streams and SQS for a high-throughput streaming use case?",
+"How do you handle message ordering guarantees at scale in a distributed system?",
+"How would you design a fan-out architecture where one event triggers multiple independent consumers?",
+"How do you size and tune Kinesis shards for a variable-throughput workload?",
+"What's your approach to handling poison-pill messages in an SQS-based pipeline?",
+"How would you design an event schema registry and versioning strategy for EventBridge/Kinesis events?",
+"How would you build a real-time analytics pipeline using Kinesis Data Streams and Kinesis Data Firehose?",
+// Route53/CloudFront/DNS/CDN
+"Explain Route 53 routing policies — weighted, latency-based, geolocation, failover — and when you'd use each.",
+"How does CloudFront caching work, and how do you design effective cache invalidation?",
+"What's your approach to designing a multi-region failover strategy using Route 53 health checks?",
+"How do CloudFront origin shields and edge functions (Lambda@Edge, CloudFront Functions) improve performance?",
+"How would you design DNS architecture for a hybrid on-prem/cloud environment?",
+"What's the difference between Lambda@Edge and CloudFront Functions, and when would you use each?",
+"How do you protect a public-facing application from DDoS attacks using CloudFront, Shield, and WAF together?",
+"How would you design a private, internal-only content delivery setup using CloudFront with signed URLs?",
+// Cost Optimization/Billing
+"How do you approach a cost optimization review for an AWS bill that's grown unexpectedly?",
+"Explain Reserved Instances vs Savings Plans vs Spot — how do you build a purchasing strategy across a large fleet?",
+"What's your approach to identifying and eliminating idle or underutilized resources at scale?",
+"How do you design cost allocation and chargeback across multiple teams sharing AWS accounts?",
+"What's your strategy for using Cost Explorer and Budgets to proactively catch cost anomalies?",
+"How would you architect a workload specifically to minimize data transfer costs?",
+"What are the cost trade-offs between serverless and container-based architectures for variable traffic?",
+// Disaster Recovery/Multi-Region/Backup
+"Explain the four DR strategies — backup & restore, pilot light, warm standby, multi-site active-active — and how you'd choose one.",
+"How would you design and test a disaster recovery plan to meet a strict RTO/RPO requirement?"
+];
+
+const ASKED_Q = [
+  "Coding question: Given an unsorted ArrayList, remove duplicates and print the result using only streams"
+]
+const LEETCODE_Q = [
+{t:"Two Sum", d:"Easy", s:"two-sum"},
+{t:"Longest Substring Without Repeating Characters", d:"Medium", s:"longest-substring-without-repeating-characters"},
+{t:"Merge Intervals", d:"Medium", s:"merge-intervals"},
+{t:"Trapping Rain Water", d:"Hard", s:"trapping-rain-water"},
+{t:"Sliding Window Maximum", d:"Hard", s:"sliding-window-maximum"},
+{t:"LRU Cache (design)", d:"Medium", s:"lru-cache"},
+{t:"LFU Cache (design)", d:"Hard", s:"lfu-cache"},
+{t:"Merge K Sorted Lists", d:"Hard", s:"merge-k-sorted-lists"},
+{t:"Top K Frequent Elements", d:"Medium", s:"top-k-frequent-elements"},
+{t:"Kth Largest Element in an Array", d:"Medium", s:"kth-largest-element-in-an-array"},
+{t:"Word Ladder (BFS)", d:"Hard", s:"word-ladder"},
+{t:"Number of Islands (DFS/BFS on grid)", d:"Medium", s:"number-of-islands"},
+{t:"Course Schedule (Topological Sort)", d:"Medium", s:"course-schedule"},
+{t:"Clone Graph", d:"Medium", s:"clone-graph"},
+{t:"Serialize and Deserialize Binary Tree", d:"Hard", s:"serialize-and-deserialize-binary-tree"},
+{t:"Lowest Common Ancestor of a Binary Tree", d:"Medium", s:"lowest-common-ancestor-of-a-binary-tree"},
+{t:"Binary Tree Maximum Path Sum", d:"Hard", s:"binary-tree-maximum-path-sum"},
+{t:"Validate Binary Search Tree", d:"Medium", s:"validate-binary-search-tree"},
+{t:"Longest Common Subsequence", d:"Medium", s:"longest-common-subsequence"},
+{t:"Edit Distance", d:"Hard", s:"edit-distance"},
+{t:"Coin Change", d:"Medium", s:"coin-change"},
+{t:"0/1 Knapsack", d:"Medium", s:""},
+{t:"House Robber (and variations)", d:"Medium", s:"house-robber"},
+{t:"Longest Increasing Subsequence", d:"Medium", s:"longest-increasing-subsequence"},
+{t:"Word Break", d:"Medium", s:"word-break"},
+{t:"Regular Expression Matching", d:"Hard", s:"regular-expression-matching"},
+{t:"Median of Two Sorted Arrays", d:"Hard", s:"median-of-two-sorted-arrays"},
+{t:"Find Median from Data Stream (design)", d:"Hard", s:"find-median-from-data-stream"},
+{t:"Design a Rate Limiter (coding)", d:"Medium", s:""},
+{t:"Design Twitter (mini system design in code)", d:"Medium", s:"design-twitter"},
+{t:"Design a Hit Counter", d:"Medium", s:"design-hit-counter"},
+{t:"Implement a Trie (Prefix Tree)", d:"Medium", s:"implement-trie-prefix-tree"},
+{t:"Word Search II (Trie + backtracking)", d:"Hard", s:"word-search-ii"},
+{t:"Design an Autocomplete System", d:"Hard", s:"design-search-autocomplete-system"},
+{t:"Meeting Rooms II (interval scheduling)", d:"Medium", s:"meeting-rooms-ii"},
+{t:"Task Scheduler", d:"Medium", s:"task-scheduler"},
+{t:"Alien Dictionary", d:"Hard", s:"alien-dictionary"},
+{t:"Minimum Window Substring", d:"Hard", s:"minimum-window-substring"},
+{t:"Longest Substring with At Most K Distinct Characters", d:"Medium", s:"longest-substring-with-at-most-k-distinct-characters"},
+{t:"Copy List with Random Pointer", d:"Medium", s:"copy-list-with-random-pointer"},
+{t:"Linked List Cycle Detection", d:"Easy", s:"linked-list-cycle"},
+{t:"Design a Producer-Consumer Queue (thread-safe)", d:"Medium", s:""},
+{t:"Design a Thread-Safe Bounded Blocking Queue", d:"Medium", s:""},
+{t:"Implement a Concurrent LRU Cache (thread-safety twist)", d:"Hard", s:""},
+{t:"Dining Philosophers Problem (concurrency)", d:"Medium", s:"the-dining-philosophers"},
+{t:"Print in Order (concurrency coordination)", d:"Easy", s:"print-in-order"},
+{t:"Design an In-Memory File System", d:"Hard", s:"design-in-memory-file-system"},
+{t:"Sort a Nearly Sorted (K-Sorted) Array", d:"Medium", s:""},
+{t:"Find All Anagrams in a String", d:"Medium", s:"find-all-anagrams-in-a-string"},
+{t:"Maximum Subarray (Kadane's) + Circular follow-up", d:"Medium", s:"maximum-subarray"}
+];
+
+const 𝗠𝗔𝗡𝗔𝗚𝗘𝗥𝗜𝗔𝗟_Q=[
+  " Walk me through your current project.",
+  " - Explain your roles and responsibilities.",
+  "Which modules are you responsible for? How do you ensure quality and timely delivery?",
+  " - What challenges have you faced in production?",
+  " - Tell me about a production issue you resolved. How did you identify the root cause and fix it?",
+  " - How do you perform RCA?",
+  " - How do you communicate with clients during a critical incident?",
+  " - Have you handled production deployments?",
+  " - How do you prioritise when multiple production issues hit at once?",
+  " - Tell me about a difficult client interaction.",
+  " - Teamwork, ownership, stakeholder communication."
+] ;
+
+
+// ---------- storage helpers ----------
+// Uses localStorage so this works as a plain downloaded HTML file opened
+// straight from your computer (window.storage only exists inside claude.ai).
+function normalizeItem(item){
+  if(item.answer===undefined) item.answer='';
+  if(item.answerLink===undefined) item.answerLink='';
+  return item;
+}
+function loadProgress(topic, staticList){
+  let stored = null;
+  try{
+    const raw = localStorage.getItem('interview-prep:progress-'+topic);
+    stored = raw ? JSON.parse(raw) : null;
+  }catch(e){ stored = null; }
+  if(stored && Array.isArray(stored) && stored.length > 0) return stored.map(normalizeItem);
+  return staticList.map((text,i)=>({
+    id: topic+'-'+i, text, status:'new', doneDate:null, stage:0, nextReview:null, answer:'', answerLink:''
+  }));
+}
+function saveProgress(topic, list){
+  try{ localStorage.setItem('interview-prep:progress-'+topic, JSON.stringify(list)); }
+  catch(e){ console.error('save failed', e); }
+}
+function loadLeetcode(){
+  const seeded = LEETCODE_Q.map((q,i)=>({
+    id:'leetcode-'+i, text:q.t, difficulty:q.d,
+    url: q.s ? ('https://leetcode.com/problems/'+q.s+'/') : '',
+    status:'new', doneDate:null, stage:0, nextReview:null, answer:'', answerLink:''
+  }));
+  let stored = null;
+  try{
+    const raw = localStorage.getItem('interview-prep:progress-leetcode');
+    stored = raw ? JSON.parse(raw) : null;
+  }catch(e){ stored = null; }
+  if(stored && Array.isArray(stored) && stored.length > 0) return stored.map(normalizeItem);
+  return seeded;
+}
+
+// ---------- date helpers ----------
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function addDays(dateStr, days){
+  const d = new Date(dateStr+'T00:00:00');
+  d.setDate(d.getDate()+days);
+  return d.toISOString().slice(0,10);
+}
+function daysBetween(a,b){
+  return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00')) / 86400000);
+}
+
+// ---------- app state ----------
+const state = { java:[], concurrency:[], jvminternals:[], java8plus:[], streams:[],collections:[], designpatterns:[], springboot:[], microservices:[], systemdesign:[], databases:[],aws:[], leetcode:[], resume:[],asked:[],manager:[], activeTab:'java', filter:'all', search:'', dueDay:'all',expanded:new Set(), editing:new Set() };
+
+function markDone(item){
+  item.status = 'scheduled';
+  item.doneDate = todayStr();
+  item.stage = 0;
+  item.nextReview = addDays(item.doneDate, INTERVALS[0]);
+}
+function markReviewed(item){
+  item.stage += 1;
+  if(item.stage < INTERVALS.length){
+    item.nextReview = addDays(item.doneDate, INTERVALS[item.stage]);
+  } else {
+    item.status = 'mastered';
+    item.nextReview = null;
+  }
+}
+function resetItem(item){
+  item.status='new'; item.doneDate=null; item.stage=0; item.nextReview=null;
+}
+
+function isDue(item){
+  return item.status==='scheduled' && item.nextReview && item.nextReview <= todayStr();
+}
+function isOverdue(item){
+  return isDue(item) && item.nextReview < todayStr();
+}
+
+function persist(topic){
+  saveProgress(topic, state[topic]);
+  render();
+}
+
+// ---------- rendering ----------
+function allItems(){
+  return [
+    ...state.java.map(x=>({...x, topic:'java'})),
+    ...state.concurrency.map(x=>({...x, topic:'concurrency'})),
+    ...state.jvminternals.map(x=>({...x, topic:'jvminternals'})),
+    ...state.java8plus.map(x=>({...x, topic:'java8plus'})),
+    ...state.streams.map(x=>({...x, topic:'streams'})),
+    ...state.collections.map(x=>({...x, topic:'collections'})),
+    ...state.designpatterns.map(x=>({...x, topic:'designpatterns'})),
+    ...state.springboot.map(x=>({...x, topic:'springboot'})),
+    ...state.microservices.map(x=>({...x, topic:'microservices'})),
+    ...state.systemdesign.map(x=>({...x, topic:'systemdesign'})),
+    ...state.databases.map(x=>({...x, topic:'databases'})),
+    ...state.aws.map(x=>({...x, topic:'aws'})),
+    ...state.leetcode.map(x=>({...x, topic:'leetcode'})),
+    ...state.resume.map(x=>({...x, topic:'resume'})),
+    ...state.asked.map(x=>({...x, topic:'asked'})),
+    ...state.manager.map(x=>({...x, topic:'manager'})),
+  ];
+}
+
+function renderDashboard(){
+  const all = allItems();
+  const due = all.filter(isDue).length;
+  const overdue = all.filter(isOverdue).length;
+  const mastered = all.filter(i=>i.status==='mastered').length;
+  const total = all.length;
+  const dash = document.getElementById('dashboard');
+  dash.innerHTML = `
+    <div class="stat-card"><div class="num">${total}</div><div class="label">Total questions</div></div>
+    <div class="stat-card due"><div class="num">${due}</div><div class="label">Due for review</div></div>
+    <div class="stat-card overdue"><div class="num">${overdue}</div><div class="label">Overdue</div></div>
+    <div class="stat-card mastered"><div class="num">${mastered}</div><div class="label">Mastered (90-day done)</div></div>
+  `;
+}
+
+function renderDueTabContent(area){
+  const all = allItems();
+  const due = all.filter(isDue);
+  if(due.length===0){
+    area.innerHTML = `<div class="queue-empty">Nothing due right now. Mark questions as read in the topic tabs to start their review cycle.</div>`;
+    return;
+  }
+  const groups = {};
+  INTERVALS.forEach(d=>groups[d]=[]);
+  due.forEach(item=>{
+    const day = INTERVALS[item.stage];
+    if(!groups[day]) groups[day] = [];
+    groups[day].push(item);
+  });
+
+  const availableDays = INTERVALS.filter(d=> groups[d] && groups[d].length>0);
+  // If the currently selected day has nothing due anymore, fall back sensibly.
+  if(state.dueDay !== 'all' && !availableDays.includes(Number(state.dueDay))){
+    state.dueDay = 'all';
+  }
+
+  const subTabs = `
+    <div class="due-day-tabs">
+      <button class="due-day-tab ${state.dueDay==='all'?'active':''}" data-dueday="all">All <span class="tcount">${due.length}</span></button>
+      ${availableDays.map(day=>`
+        <button class="due-day-tab ${String(state.dueDay)===String(day)?'active':''}" data-dueday="${day}">Day ${day} <span class="tcount">${groups[day].length}</span></button>
+      `).join('')}
+    </div>`;
+
+  const daysToShow = state.dueDay==='all' ? availableDays : [Number(state.dueDay)];
+
+  let html = subTabs;
+  daysToShow.forEach(day=>{
+    const items = groups[day];
+    if(!items || items.length===0) return;
+    items.sort((a,b)=> a.nextReview.localeCompare(b.nextReview));
+    html += `
+    <div class="due-day-group">
+      <div class="section-heading">Day ${day} review <span class="count-pill">${items.length}</span></div>
+      <div class="card-stack">
+        ${items.map(item=>{
+          const overdue = isOverdue(item);
+          const overdueBy = overdue ? daysBetween(item.nextReview, todayStr()) : 0;
+          return `
+          <div class="review-card ${overdue?'overdue':''}" style="--topic-color:${TOPIC_META[item.topic].color}" data-action="goto" data-topic="${item.topic}" data-id="${item.id}">
+            <div class="rc-text">
+              ${escapeHtml(item.text)}
+              <div class="rc-meta ${overdue?'overdue-txt':''}">${TOPIC_META[item.topic].label} ${overdue ? `· overdue ${overdueBy}d` : '· due today'} · <span class="rc-open-link">open question ↗</span></div>
+            </div>
+            <div class="rc-actions">
+              <button class="btn btn-primary" data-action="review" data-topic="${item.topic}" data-id="${item.id}">Reviewed</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  area.innerHTML = html;
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('tabs');
+  const dueCount = allItems().filter(isDue).length;
+  const dueTab = `<button class="tab due-tab ${state.activeTab==='due'?'active':''}" data-tab="due">
+    <span class="dot"></span>🔔 Due for Review <span class="tcount">${dueCount}</span>
+  </button><span class="tab-divider"></span>`;
+  const topicTabs = Object.keys(TOPIC_META).map(key=>{
+    const count = state[key].length;
+    return `<button class="tab ${state.activeTab===key?'active':''}" style="--tab-color:${TOPIC_META[key].color}" data-tab="${key}">
+      <span class="dot"></span>${TOPIC_META[key].label} <span class="tcount">${count}</span>
+    </button>`;
+  }).join('');
+  tabs.innerHTML = dueTab + topicTabs;
+}
+
+function renderTopicArea(){
+  const key = state.activeTab;
+  const area = document.getElementById('topicArea');
+
+  if(key === 'due'){
+    renderDueTabContent(area);
+    return;
+  }
+
+  const list = state[key];
+  const mastered = list.filter(i=>i.status==='mastered').length;
+  const pct = list.length ? Math.round((mastered/list.length)*100) : 0;
+
+  let leetForm = '';
+  if(key==='leetcode'){
+    leetForm = `
+    <div class="leet-form">
+      <div>
+        <label>Problem title</label>
+        <input type="text" id="leetTitle" placeholder="e.g. Two Sum">
+      </div>
+      <div>
+        <label>URL (optional)</label>
+        <input type="text" id="leetUrl" placeholder="https://leetcode.com/problems/...">
+      </div>
+      <div>
+        <label>Difficulty</label>
+        <select id="leetDiff">
+          <option>Easy</option><option selected>Medium</option><option>Hard</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="addLeetBtn">Add problem</button>
+    </div>`;
+  } else {
+    leetForm = `
+    <div class="add-form">
+      <input type="text" id="newQText" placeholder="Add a new ${TOPIC_META[key].label} question…">
+      <button class="btn btn-primary" id="addQBtn">Add question</button>
+    </div>`;
+  }
+
+  area.innerHTML = `
+    ${leetForm}
+    <div class="topic-toolbar">
+      <div class="progress-bar"><div class="progress-bar-fill" style="width:${pct}%;background:${TOPIC_META[key].color}"></div></div>
+      <div class="progress-label">${mastered}/${list.length} mastered</div>
+    </div>
+    <div class="search-row">
+      <input type="text" id="qSearchInput" class="q-search-input" placeholder="Search questions or your notes…" value="${escapeAttr(state.search)}">
+      <div class="search-stats" id="searchStats"></div>
+    </div>
+    <div class="filter-row">
+      ${['all','new','scheduled','due','mastered'].map(f=>`<button class="filter-chip ${state.filter===f?'active':''}" data-filter="${f}">${f}</button>`).join('')}
+    </div>
+    <div class="q-list" id="qListContainer"></div>
+  `;
+
+  renderQList();
+
+  const searchInput = document.getElementById('qSearchInput');
+  searchInput.addEventListener('input', ()=>{
+    state.search = searchInput.value;
+    renderQList();
+  });
+
+  if(key==='leetcode'){
+    document.getElementById('addLeetBtn').addEventListener('click', async ()=>{
+      const title = document.getElementById('leetTitle').value.trim();
+      const url = document.getElementById('leetUrl').value.trim();
+      const diff = document.getElementById('leetDiff').value;
+      if(!title) return;
+      const id = 'leetcode-custom-'+Date.now();
+      state.leetcode.push({id, text:title, url, difficulty:diff, status:'new', doneDate:null, stage:0, nextReview:null, answer:'', answerLink:''});
+      document.getElementById('leetTitle').value='';
+      document.getElementById('leetUrl').value='';
+      await persist('leetcode');
+    });
+  } else {
+    const addBtn = document.getElementById('addQBtn');
+    const input = document.getElementById('newQText');
+    const submit = async ()=>{
+      const text = input.value.trim();
+      if(!text) return;
+      const id = key+'-custom-'+Date.now();
+      state[key].push({id, text, status:'new', doneDate:null, stage:0, nextReview:null, answer:'', answerLink:''});
+      input.value='';
+      await persist(key);
+    };
+    addBtn.addEventListener('click', submit);
+    input.addEventListener('keydown', (e)=>{ if(e.key==='Enter') submit(); });
+  }
+}
+
+function renderQList(){
+  const key = state.activeTab;
+  const list = state[key];
+  const container = document.getElementById('qListContainer');
+  if(!container) return;
+
+  const term = state.search.trim().toLowerCase();
+  const matchesSearch = item=>{
+    if(!term) return true;
+    const haystack = (item.text + ' ' + (item.answer||'')).toLowerCase();
+    return haystack.includes(term);
+  };
+
+  const searchScope = list.filter(matchesSearch);
+  const notReadCount = searchScope.filter(i=>i.status==='new').length;
+  const readCount = searchScope.length - notReadCount;
+  const statsEl = document.getElementById('searchStats');
+  if(statsEl){
+    statsEl.innerHTML = `<span class="stat-chip not-read">${notReadCount} not read</span><span class="stat-chip read">${readCount} read</span>`;
+  }
+
+  const filtered = list.filter(item=>{
+    if(state.filter==='new' && item.status!=='new') return false;
+    if(state.filter==='scheduled' && item.status!=='scheduled') return false;
+    if(state.filter==='mastered' && item.status!=='mastered') return false;
+    if(state.filter==='due' && !isDue(item)) return false;
+    if(!matchesSearch(item)) return false;
+    return true;
+  });
+
+  container.innerHTML = filtered.length
+    ? filtered.map(item=>renderQItem(item, key, list.indexOf(item)+1)).join('')
+    : `<div class="queue-empty">No questions match${term ? ' "'+escapeHtml(state.search)+'"' : ' this filter'}.</div>`;
+}
+
+function renderQItem(item, topic, num){
+  const editKey = topic+':'+item.id;
+  const isEditing = state.editing.has(editKey);
+
+  if(isEditing){
+    const extraFields = topic==='leetcode' ? `
+      <div class="edit-field-row">
+        <input type="text" class="edit-diff-input" data-edit-field="difficulty" placeholder="Difficulty (Easy/Medium/Hard)" value="${escapeAttr(item.difficulty||'')}">
+        <input type="text" class="edit-link-input" data-edit-field="url" placeholder="Problem link" value="${escapeAttr(item.url||'')}">
+      </div>` : '';
+    return `
+    <div class="q-item editing" id="q-item-${topic}-${item.id}">
+      <div class="edit-form-inline">
+        <label>Question text</label>
+        <textarea rows="3" class="edit-text-input" data-edit-field="text">${escapeHtml(item.text)}</textarea>
+        ${extraFields}
+        <div class="edit-actions">
+          <button class="btn btn-primary" data-action="saveEdit" data-topic="${topic}" data-id="${item.id}">Save</button>
+          <button class="btn btn-ghost" data-action="cancelEdit" data-topic="${topic}" data-id="${item.id}">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  let badge = '';
+  if(item.status==='new') badge = `<span class="status-badge new">not started</span>`;
+  else if(item.status==='mastered') badge = `<span class="status-badge mastered">mastered</span>`;
+  else if(isDue(item)) badge = `<span class="status-badge overdue">due · day ${INTERVALS[item.stage]}</span>`;
+  else badge = `<span class="status-badge scheduled">next: ${item.nextReview} (day ${INTERVALS[item.stage]})</span>`;
+
+  let diffTag = '';
+  if(topic==='leetcode' && item.difficulty){
+    diffTag = `<span class="diff-tag diff-${item.difficulty}">${item.difficulty}</span>`;
+  }
+
+  const linkPart = (topic==='leetcode' && item.url) ? ` <a href="${escapeAttr(item.url)}" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none;">↗ open</a>` : '';
+
+  let actions = '';
+  if(item.status==='new'){
+    actions = `<button class="btn btn-primary" data-action="done" data-topic="${topic}" data-id="${item.id}">Mark as read</button>`;
+  } else if(item.status==='mastered'){
+    actions = `<button class="btn btn-ghost" data-action="reset" data-topic="${topic}" data-id="${item.id}">Reset</button>`;
+  } else {
+    if(isDue(item)){
+      actions = `<button class="btn btn-primary" data-action="review" data-topic="${topic}" data-id="${item.id}">Reviewed</button>
+                 <button class="btn btn-ghost" data-action="reset" data-topic="${topic}" data-id="${item.id}">Reset</button>`;
+    } else {
+      actions = `<button class="btn btn-ghost" data-action="reset" data-topic="${topic}" data-id="${item.id}">Reset</button>`;
+    }
+  }
+  actions += `<button class="btn btn-ghost" data-action="editQuestion" data-topic="${topic}" data-id="${item.id}" title="Edit this question">Edit</button>`;
+  actions += `<button class="btn btn-danger" data-action="remove" data-topic="${topic}" data-id="${item.id}" title="Remove this question">Remove</button>`;
+
+  const hasAnswer = (item.answer && item.answer.trim()) || (item.answerLink && item.answerLink.trim());
+  const eKey = topic+':'+item.id;
+  const isOpen = state.expanded.has(eKey);
+  const answerBadge = hasAnswer ? `<span class="status-badge answered">✓ answered</span>` : '';
+  const toggleLabel = isOpen ? 'Hide answer' : (hasAnswer ? 'View answer' : 'Add answer');
+
+  const answerPanel = isOpen ? `
+    <div class="answer-panel">
+      <label>Your answer / notes</label>
+      <textarea rows="9" data-answer-field="answer" data-topic="${topic}" data-id="${item.id}" placeholder="Write your own answer, key points, or notes here…">${escapeHtml(item.answer||'')}</textarea>
+      <label>Link (blog post, GitHub repo, docs…)</label>
+      <input type="text" data-answer-field="answerLink" data-topic="${topic}" data-id="${item.id}" value="${escapeAttr(item.answerLink||'')}" placeholder="https://...">
+      ${item.answerLink ? `<a href="${escapeAttr(item.answerLink)}" target="_blank" rel="noopener" class="answer-link-preview">↗ open saved link</a>` : ''}
+    </div>` : '';
+
+  return `
+  <div class="q-item" id="q-item-${topic}-${item.id}">
+    <div class="q-row">
+      <div class="q-index">${String(num).padStart(2,'0')}</div>
+      <div class="q-body">
+        <div class="q-text">${escapeHtml(item.text)}${linkPart}</div>
+        <div class="q-tags">${badge}${diffTag}${answerBadge}</div>
+      </div>
+      <div class="q-actions">
+        <button class="btn btn-ghost" data-action="toggleAnswer" data-topic="${topic}" data-id="${item.id}">${toggleLabel}</button>
+        ${actions}
+      </div>
+    </div>
+    ${answerPanel}
+  </div>`;
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+function render(){
+  renderDashboard();
+  renderTabs();
+  renderTopicArea();
+}
+
+// ---------- event delegation ----------
+document.addEventListener('click', async (e)=>{
+  const actionEl = e.target.closest('[data-action]');
+
+  if(actionEl){
+    const action = actionEl.dataset.action;
+
+    if(action === 'toggleAnswer'){
+      const key = actionEl.dataset.topic+':'+actionEl.dataset.id;
+      if(state.expanded.has(key)) state.expanded.delete(key); else state.expanded.add(key);
+      render();
+      return;
+    }
+
+    if(action === 'editQuestion'){
+      const key = actionEl.dataset.topic+':'+actionEl.dataset.id;
+      state.editing.add(key);
+      render();
+      requestAnimationFrame(()=>{
+        const el = document.getElementById('q-item-'+actionEl.dataset.topic+'-'+actionEl.dataset.id);
+        const ta = el && el.querySelector('.edit-text-input');
+        if(ta) ta.focus();
+      });
+      return;
+    }
+
+    if(action === 'cancelEdit'){
+      const key = actionEl.dataset.topic+':'+actionEl.dataset.id;
+      state.editing.delete(key);
+      render();
+      return;
+    }
+
+    if(action === 'saveEdit'){
+      const { topic, id } = actionEl.dataset;
+      const key = topic+':'+id;
+      const container = document.getElementById('q-item-'+topic+'-'+id);
+      const item = state[topic] && state[topic].find(i=>i.id===id);
+      if(!item || !container){ state.editing.delete(key); render(); return; }
+      const textEl = container.querySelector('[data-edit-field="text"]');
+      const newText = textEl ? textEl.value.trim() : item.text;
+      if(newText) item.text = newText;
+      const diffEl = container.querySelector('[data-edit-field="difficulty"]');
+      if(diffEl) item.difficulty = diffEl.value.trim();
+      const urlEl = container.querySelector('[data-edit-field="url"]');
+      if(urlEl) item.url = urlEl.value.trim();
+      state.editing.delete(key);
+      await persist(topic);
+      return;
+    }
+
+    if(action === 'goto'){
+      const { topic, id } = actionEl.dataset;
+      state.activeTab = topic;
+      state.filter = 'all';
+      state.search = '';
+      state.dueDay = 'all';
+      state.expanded.add(topic+':'+id);
+      render();
+      // scroll to the question and flash-highlight it once the DOM has updated
+      requestAnimationFrame(()=>{
+        setTimeout(()=>{
+          const el = document.getElementById('q-item-'+topic+'-'+id);
+          if(el){
+            el.scrollIntoView({behavior:'smooth', block:'center'});
+            el.classList.add('flash-highlight');
+            setTimeout(()=>el.classList.remove('flash-highlight'), 1800);
+          }
+        }, 50);
+      });
+      return;
+    }
+
+    const { topic, id } = actionEl.dataset;
+    const list = state[topic];
+    const item = list && list.find(i=>i.id===id);
+    if(!item) return;
+    if(action==='done') markDone(item);
+    if(action==='review') markReviewed(item);
+    if(action==='reset') resetItem(item);
+    if(action==='remove'){
+      if(!confirm('Remove this question from the list? This cannot be undone.')) return;
+      state[topic] = list.filter(i=>i.id!==id);
+      state.expanded.delete(topic+':'+id);
+      await persist(topic);
+      return;
+    }
+    await persist(topic);
+    return;
+  }
+
+  const tabEl = e.target.closest('[data-tab]');
+  if(tabEl){
+    state.activeTab = tabEl.dataset.tab;
+    state.filter='all';
+    state.search='';
+    state.dueDay='all';
+    render();
+    return;
+  }
+
+  const filterEl = e.target.closest('[data-filter]');
+  if(filterEl){
+    state.filter = filterEl.dataset.filter;
+    renderQList();
+    document.querySelectorAll('.filter-chip').forEach(el=>{
+      el.classList.toggle('active', el.dataset.filter===state.filter);
+    });
+    return;
+  }
+
+  const duedayEl = e.target.closest('[data-dueday]');
+  if(duedayEl){
+    state.dueDay = duedayEl.dataset.dueday;
+    renderTopicArea();
+  }
+});
+
+// Auto-save answer text / link when the field loses focus (not on every keystroke,
+// so re-rendering doesn't yank focus away while typing).
+document.addEventListener('focusout', (e)=>{
+  const t = e.target;
+  const field = t.dataset && t.dataset.answerField;
+  if(!field) return;
+  const { topic, id } = t.dataset;
+  const item = state[topic] && state[topic].find(i=>i.id===id);
+  if(!item) return;
+  item[field] = t.value;
+  saveProgress(topic, state[topic]);
+  renderDashboard();
+  renderTabs();
+  renderTopicArea();
+});
+
+// ---------- Excel import / export ----------
+// The spreadsheet is the editable source of truth for questions: add or delete
+// rows in Excel, then "Load Excel" here to sync. Dates are written back into
+// the sheet whenever you click "Save to Excel".
+let excelFileHandle = null; // set only in browsers supporting the File System Access API (Chrome/Edge)
+
+const EXCEL_COLUMNS = ['ID','Category','Question','Difficulty','Link','Status','DoneDate','Stage','NextReviewDate','Answer','AnswerLink'];
+
+function topicKeyFromLabel(label){
+  const clean = String(label||'').trim().toLowerCase();
+  for(const key in TOPIC_META){
+    if(TOPIC_META[key].label.toLowerCase() === clean) return key;
+  }
+  return null;
+}
+
+function excelCellToDateStr(val){
+  if(val===undefined || val===null || val==='') return null;
+  if(val instanceof Date) return val.toISOString().slice(0,10);
+  if(typeof val === 'number'){
+    // Excel serial date (days since 1899-12-30)
+    const ms = Math.round((val - 25569) * 86400 * 1000);
+    return new Date(ms).toISOString().slice(0,10);
+  }
+  return String(val).slice(0,10);
+}
+
+function buildExportRows(){
+  const rows = [];
+  Object.keys(TOPIC_META).forEach(key=>{
+    state[key].forEach(item=>{
+      rows.push({
+        ID: item.id,
+        Category: TOPIC_META[key].label,
+        Question: item.text,
+        Difficulty: item.difficulty || '',
+        Link: item.url || '',
+        Status: item.status,
+        DoneDate: item.doneDate || '',
+        Stage: item.stage,
+        NextReviewDate: item.nextReview || '',
+        Answer: item.answer || '',
+        AnswerLink: item.answerLink || ''
+      });
+    });
+  });
+  return rows;
+}
+
+function safeSheetName(name, used){
+  // Excel sheet names: max 31 chars, no \ / ? * [ ] : characters, must be unique.
+  let clean = String(name).replace(/[\\\/\?\*\[\]:]/g, '-').trim();
+  if(clean.length > 31) clean = clean.slice(0, 31);
+  let base = clean, n = 2;
+  while(used.has(clean)){
+    const suffix = ' ('+n+')';
+    clean = base.slice(0, 31 - suffix.length) + suffix;
+    n++;
+  }
+  used.add(clean);
+  return clean;
+}
+
+function buildWorkbook(){
+  const wb = XLSX.utils.book_new();
+  const usedNames = new Set();
+  Object.keys(TOPIC_META).forEach(key=>{
+    const items = state[key];
+    if(!items || items.length === 0) return;
+    const rows = items.map(item=>({
+      ID: item.id,
+      Category: TOPIC_META[key].label,
+      Question: item.text,
+      Difficulty: item.difficulty || '',
+      Link: item.url || '',
+      Status: item.status,
+      DoneDate: item.doneDate || '',
+      Stage: item.stage,
+      NextReviewDate: item.nextReview || '',
+      Answer: item.answer || '',
+      AnswerLink: item.answerLink || ''
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows, {header:EXCEL_COLUMNS});
+    ws['!cols'] = [{wch:16},{wch:26},{wch:70},{wch:10},{wch:30},{wch:11},{wch:11},{wch:6},{wch:14},{wch:50},{wch:30}];
+    XLSX.utils.book_append_sheet(wb, ws, safeSheetName(TOPIC_META[key].label, usedNames));
+  });
+  if(wb.SheetNames.length === 0){
+    // avoid an invalid empty workbook
+    const ws = XLSX.utils.json_to_sheet([], {header:EXCEL_COLUMNS});
+    XLSX.utils.book_append_sheet(wb, ws, 'Tracker');
+  }
+  return wb;
+}
+
+function setExcelStatus(text, linked){
+  const el = document.getElementById('excelStatus');
+  el.textContent = text;
+  el.classList.toggle('linked', !!linked);
+}
+
+function downloadWorkbook(){
+  XLSX.writeFile(buildWorkbook(), 'interview-prep-tracker.xlsx');
+}
+
+async function saveToExcel(){
+  if(excelFileHandle){
+    try{
+      const wbout = XLSX.write(buildWorkbook(), {bookType:'xlsx', type:'array'});
+      const writable = await excelFileHandle.createWritable();
+      await writable.write(wbout);
+      await writable.close();
+      setExcelStatus('Saved to ' + excelFileHandle.name + ' at ' + new Date().toLocaleTimeString(), true);
+      return;
+    }catch(e){ console.error('direct save failed, falling back to download', e); }
+  }
+  downloadWorkbook();
+  setExcelStatus('Downloaded interview-prep-tracker.xlsx — replace your old copy with this one.', true);
+}
+
+function parseWorkbookRows(rows){
+  const grouped = {};
+  Object.keys(TOPIC_META).forEach(k=>grouped[k]=[]);
+  let matched = 0;
+  rows.forEach((row,i)=>{
+    const key = topicKeyFromLabel(row.Category);
+    const text = String(row.Question||'').trim();
+    if(!key || !text) return;
+    matched++;
+    grouped[key].push({
+      id: row.ID ? String(row.ID) : (key+'-custom-'+Date.now()+'-'+i),
+      text,
+      difficulty: row.Difficulty ? String(row.Difficulty).trim() : undefined,
+      url: row.Link ? String(row.Link).trim() : undefined,
+      status: row.Status ? String(row.Status).trim() : 'new',
+      doneDate: excelCellToDateStr(row.DoneDate),
+      stage: Number(row.Stage) || 0,
+      nextReview: excelCellToDateStr(row.NextReviewDate),
+      answer: row.Answer ? String(row.Answer) : '',
+      answerLink: row.AnswerLink ? String(row.AnswerLink) : ''
+    });
+  });
+  Object.keys(grouped).forEach(k=>{
+    if(grouped[k].length > 0){
+      state[k] = grouped[k];
+      saveProgress(k, state[k]);
+    }
+  });
+  return matched;
+}
+
+async function parseExcelFile(file){
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array', cellDates:true});
+  let rows = [];
+  wb.SheetNames.forEach(name=>{
+    if(/^read\s*me$/i.test(name.trim())) return; // skip instructions sheet
+    const sheet = wb.Sheets[name];
+    const sheetRows = XLSX.utils.sheet_to_json(sheet, {defval:''});
+    // If a sheet has no Category column filled in (e.g. one-sheet-per-category
+    // files where the sheet name IS the category), fall back to the sheet name.
+    sheetRows.forEach(r=>{
+      if(!r.Category || !String(r.Category).trim()) r.Category = name;
+    });
+    rows = rows.concat(sheetRows);
+  });
+  const matched = parseWorkbookRows(rows);
+  render();
+  setExcelStatus('Loaded ' + matched + ' questions from ' + file.name + ' (' + wb.SheetNames.length + ' sheet' + (wb.SheetNames.length===1?'':'s') + ') — linked for saving.', true);
+}
+
+async function loadExcelViaPicker(){
+  if('showOpenFilePicker' in window){
+    try{
+      const [handle] = await window.showOpenFilePicker({
+        types:[{description:'Excel workbook', accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']}}]
+      });
+      excelFileHandle = handle;
+      const file = await handle.getFile();
+      await parseExcelFile(file);
+    }catch(e){
+      if(e.name !== 'AbortError') console.error(e);
+    }
+  } else {
+    document.getElementById('excelFileInput').click();
+  }
+}
+
+async function init(){
+  document.getElementById('todayLabel').textContent = 'Today · ' + new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  state.java = loadProgress('java', JAVA_Q);
+  state.concurrency = loadProgress('concurrency', CONCURRENCY_Q);
+  state.jvminternals = loadProgress('jvminternals', JVM_Q);
+  state.java8plus = loadProgress('java8plus', JAVA8_Q);
+  state.streams=loadProgress('streams', STREAM_Q);
+  state.collections = loadProgress('collections', COLLECTIONS_Q);
+  state.designpatterns = loadProgress('designpatterns', DESIGNPATTERNS_Q);
+  state.springboot = loadProgress('springboot', SPRING_Q);
+  state.microservices = loadProgress('microservices', MICRO_Q);
+  state.systemdesign = loadProgress('systemdesign', SYSTEMDESIGN_Q);
+  state.databases = loadProgress('databases', DATABASES_Q);
+  state.aws = loadProgress('aws', AWS_Q);
+  state.leetcode = loadLeetcode();
+  state.resume = loadProgress('resume', []);
+  state.asked = loadProgress('asked', ASKED_Q);
+  state.manager = loadProgress('manager', 𝗠𝗔𝗡𝗔𝗚𝗘𝗥𝗜𝗔𝗟_Q);
+  render();
+
+  document.getElementById('loadExcelBtn').addEventListener('click', loadExcelViaPicker);
+  document.getElementById('saveExcelBtn').addEventListener('click', saveToExcel);
+  document.getElementById('excelFileInput').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(file) parseExcelFile(file);
+    e.target.value = '';
+  });
+}
+init();
+</script>
+</body>
+</html>
